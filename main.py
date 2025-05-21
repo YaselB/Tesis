@@ -5,13 +5,14 @@ from infrastructure.Retriever.fs_watcher import start_watcher
 from application.Services.Chat_Service import ChatService
 from Presentation.Routes.Chat_route import router as chat_router
 from Presentation.Routes.user_route import router as user_router
+from contextlib import asynccontextmanager
 
 app = FastAPI()
 app.include_router(chat_router)
 app.include_router(user_router)
 
-@app.on_event("startup")
-def startup_event():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     # 1) Inicializa tu retriever e indexa si es necesario
     retriever = TfidfRetriever(docs_path="docs")
     try:
@@ -31,4 +32,9 @@ def startup_event():
     start_watcher(retriever)
 
     print("✅ Startup completo. Watcher activo en 'docs/'")
+
+
+@app.get("/")
+async def root():
+    return {"message": "Bienvenido a la API del ChatBot"}
 
